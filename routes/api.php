@@ -18,8 +18,10 @@ use App\Http\Controllers\UserController;
 //     return $request->user();
 // });
 
-Route::get('/users', [UserController::class , 'getAll']);
-Route::get('/users', [UserController::class , 'getAll']);
+// Route::get('/users', [UserController::class , 'getAll']);
+// Route::get('/users', [UserController::class , 'getAll']);
 Route::get('/users', [UserController::class , 'getAll']);
 
 Route::post('/register', [UserController::class, 'create']);
+
+Route::post('/login', [UserController::class, 'login']);
