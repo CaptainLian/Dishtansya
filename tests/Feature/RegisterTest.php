@@ -12,6 +12,7 @@ class RegisterTest extends TestCase {
 
     const API_REGISTER = '/api/register';
     const API_LOGIN = '/api/login';
+    
     const TEST_EMAIL = 'backend@multisyscorp.com';
     const TEST_PASSWORD = 'test123';
     const TEST_PASSWORD_INCORRECT = '1234567891011';
