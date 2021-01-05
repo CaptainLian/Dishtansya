@@ -2,7 +2,10 @@
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\OrderController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -18,10 +21,8 @@ use App\Http\Controllers\UserController;
 //     return $request->user();
 // });
 
-// Route::get('/users', [UserController::class , 'getAll']);
-// Route::get('/users', [UserController::class , 'getAll']);
 Route::get('/users', [UserController::class , 'getAll']);
-
 Route::post('/register', [UserController::class, 'create']);
-
 Route::post('/login', [UserController::class, 'login']);
+
+Route::post('/order', [OrderController::class, 'order']);
