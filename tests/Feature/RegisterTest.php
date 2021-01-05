@@ -8,7 +8,7 @@ use Tests\TestCase;
 
 use App\Models\User;
 use App\Models\Product;
-
+use App\Http\Controllers\UserController;
 class UserTest extends TestCase
 {
     use RefreshDatabase;
@@ -20,6 +20,8 @@ class UserTest extends TestCase
     const TEST_EMAIL = 'backend@multisyscorp.com';
     const TEST_PASSWORD = 'test123';
     const TEST_PASSWORD_INCORRECT = '1234567891011';
+
+    const COUNT_FAILED_ATTEMPTS_THRESHOLD = UserController::COUNT_FAILED_ATTEMPTS_THRESHOLD;
 
     private $userModel;
 
@@ -92,6 +94,50 @@ class UserTest extends TestCase
         $response->assertStatus(400)
             ->assertJson([
                 'message' => 'Email already taken',
+            ]);
+    }
+
+    /**
+     * @depends testRegistration
+     * @test
+     */
+    public function testLoginLocking(User $user) : void {
+        //Register the user
+        $response = $this->postJson(self::API_REGISTER, [
+            'email' => self::TEST_EMAIL,
+            'password' => self::TEST_PASSWORD,
+        ]);
+        $response->assertStatus(201)
+            ->assertJson([
+                'message' => 'User successfully registered',
+            ]);
+        
+            
+        for($count = 1; $count < self::COUNT_FAILED_ATTEMPTS_THRESHOLD; ++$count) {
+            //Login using incorrect credentials
+            $response = $this->postJson(self::API_LOGIN, [
+                'email' => self::TEST_EMAIL,
+                'password' => self::TEST_PASSWORD_INCORRECT,
+            ]);
+            $response->assertStatus(401);
+        }
+
+        $response = $this->postJson(self::API_LOGIN, [
+            'email' => self::TEST_EMAIL,
+            'password' => self::TEST_PASSWORD_INCORRECT,
+        ]);
+        $response->assertStatus(401)
+            ->assertJson([
+                'message' => 'Invalid credentials. Account locked for 5 minutes',
+            ]);
+
+        $response = $this->postJson(self::API_LOGIN, [
+            'email' => self::TEST_EMAIL,
+            'password' => self::TEST_PASSWORD_INCORRECT,
+        ]);
+        $response->assertStatus(409)
+            ->assertJson([
+                'message' => 'Account locked',
             ]);
     }
 }

@@ -98,10 +98,11 @@ class UserController extends Controller {
 		$isUserLocked = $now->lte($user->locked_until);
 		if($isUserLocked) {
 			$this->logger->debug('Account attempt failed: account locked');
-			$until = $user->locked_until->diffForHumans();
+			// $until = $user->locked_until->diffForHumans();
 			return response()->json([
-				'message' => "Account locked until $until",
-			], 401);
+				'message' => "Account locked",
+				'until' => $user->locked_until,
+			], 409);
 		}
 		
 		$hashedInputPassword = Hash::make($inputPassword);
@@ -125,7 +126,7 @@ class UserController extends Controller {
 					'user' => $user,
 				]);
 				
-				$message = 'Invalid credentials. Account locked for 5 minutes.';
+				$message = 'Invalid credentials. Account locked for 5 minutes';
 			}
 			$user->save();
 			
