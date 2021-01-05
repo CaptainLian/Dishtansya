@@ -1,15 +1,19 @@
 <?php
-
 namespace Tests\Feature;
 
-// use Illuminate\Foundation\Testing\WithFaker; //LOOK AT THE MOVES, LOOK AT THE CLENSE, FAKER WHAT WAS THAT?!
+use Psr\Log\LoggerInterface as Log;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+// use Illuminate\Foundation\Testing\WithFaker;
 use Tests\TestCase;
 
 use App\Models\User;
-class RegisterTest extends TestCase {   
+use App\Models\Product;
+
+class UserTest extends TestCase
+{
     use RefreshDatabase;
 
+    const API_ORDER = '/api/order';
     const API_REGISTER = '/api/register';
     const API_LOGIN = '/api/login';
     
@@ -17,23 +21,59 @@ class RegisterTest extends TestCase {
     const TEST_PASSWORD = 'test123';
     const TEST_PASSWORD_INCORRECT = '1234567891011';
 
-    private User $user;
+    private $userModel;
 
-    /**
-     * Undocumented function
-     * 
-     */
-    public function setUp() : void{
+    protected function setUp(): void {
         parent::setUp();
-
-        $this->user = $this->app->make(User::class);
+        //Load models
+        $this->productModel = $this->app->make(Product::class);
+        $this->userModel = $this->app->make(User::class);
+        //Load other dependencies through injection from app container
+        $this->logger = $this->app->make(Log::class);
     }
 
     /**
      * Tests the registration of a user
      * @test
      */
-    public function testRegistration() : void {
+    public function testRegistration() : User {
+        //Register the user
+        $response = $this->postJson(self::API_REGISTER, [
+            'email' => self::TEST_EMAIL,
+            'password' => self::TEST_PASSWORD,
+        ]);
+        $response->assertStatus(201)
+            ->assertJson([  
+                'message' => 'User successfully registered',
+            ]);
+        
+        //Check if the user exists in the database
+        $user = $this->userModel->where('email', '=', self::TEST_EMAIL)->first();
+        $this->assertNotNull($user);
+
+        //Login using correct credentials
+        $response = $this->postJson(self::API_LOGIN, [
+            'email' => self::TEST_EMAIL,
+            'password' => self::TEST_PASSWORD,
+        ]);
+        $response->assertStatus(201);
+
+        //Login using incorrect credentials
+        $response = $this->postJson(self::API_LOGIN, [
+            'email' => self::TEST_EMAIL,
+            'password' => self::TEST_PASSWORD_INCORRECT,
+        ]);
+        $response->assertStatus(401);
+
+        return $user;
+    }
+
+    /**
+     * Test to see if the API can handle duplicates
+     * @depends testRegistration
+     * @test
+     */
+    public function testRegistrationDuplicate(User $user) : void {
         //Register the user
         $response = $this->postJson(self::API_REGISTER, [
             'email' => self::TEST_EMAIL,
@@ -53,40 +93,5 @@ class RegisterTest extends TestCase {
             ->assertJson([
                 'message' => 'Email already taken',
             ]);
-            
-        //Check if the user exists in the database
-        $user = $this->user->where('email', '=', self::TEST_EMAIL)->first();
-        $this->assertNotNull($user);
-    }
-    
-    /**
-     * @test
-     * @depends testRegistration
-     * @return void
-     */
-    public function testLogin() : void {
-        //Register the user
-        $response = $this->postJson(self::API_REGISTER, [
-            'email' => self::TEST_EMAIL,
-            'password' => self::TEST_PASSWORD,
-        ]);
-        $response->assertStatus(201)
-            ->assertJson([
-                'message' => 'User successfully registered',
-            ]);
-        
-        //Login using correct credentials
-        $response = $this->postJson(self::API_LOGIN, [
-            'email' => self::TEST_EMAIL,
-            'password' => self::TEST_PASSWORD,
-        ]);
-        $response->assertStatus(201);
-
-        //Login using incorrect credentials
-        $response = $this->postJson(self::API_LOGIN, [
-            'email' => self::TEST_EMAIL,
-            'password' => self::TEST_PASSWORD_INCORRECT,
-        ]);
-        $response->assertStatus(401);
     }
 }

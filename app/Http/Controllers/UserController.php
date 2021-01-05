@@ -89,7 +89,7 @@ class UserController extends Controller {
 
 	/**
      * Get a JWT via given credentials.
-     *
+     * TODO: Use the "Authorization Basic" header instead
      * @return \Illuminate\Http\JsonResponse
      */
     public function login(Request $request){
