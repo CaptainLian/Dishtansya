@@ -44,6 +44,17 @@ class User extends Authenticatable implements JWTSubject {
         // 'remember_token',
     ];
 
+     /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [
+        'locked_until',
+        'created_at',
+        'updated_at',
+    ];
+
     /**
      * The attributes that should be cast to native types.
      *
